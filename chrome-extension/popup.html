@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haloscope</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 400px;
+      min-height: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    
+    .container {
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .button-container {
+      margin-bottom: 20px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    
+    button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      display: none;
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .results {
+      display: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 15px;
+      backdrop-filter: blur(10px);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .result-item {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .result-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .result-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .result-value {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    
+    .score-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    
+    .score-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .score-fill.medium {
+      background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+    
+    .score-fill.low {
+      background: linear-gradient(90deg, #f87171, #ef4444);
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    
+    .badge.high {
+      background: rgba(74, 222, 128, 0.2);
+      border: 1px solid #4ade80;
+    }
+    
+    .badge.medium {
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid #fbbf24;
+    }
+    
+    .badge.low {
+      background: rgba(248, 113, 113, 0.2);
+      border: 1px solid #f87171;
+    }
+    
+    .error {
+      display: none;
+      background: rgba(248, 113, 113, 0.2);
+      border: 1px solid #f87171;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    
+    .claims {
+      margin-top: 10px;
+    }
+    
+    .claim {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔍 Haloscope</h1>
+      <p>News Credibility Analyzer</p>
+    </div>
+    
+    <div class="button-container">
+      <button id="analyzeBtn">Analyze Current Page</button>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing article...</p>
+    </div>
+    
+    <div class="error" id="error">
+      <strong>Error:</strong> <span id="errorMsg"></span>
+    </div>
+    
+    <div class="results" id="results">
+      <div class="result-item">
+        <div class="result-label">Trust Score</div>
+        <div class="result-value" id="trustScore">-</div>
+        <div class="score-bar">
+          <div class="score-fill" id="trustBar"></div>
+        </div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Source Domain</div>
+        <div class="result-value" id="domain">-</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Credibility</div>
+        <div class="result-value" id="credibility">-</div>
+        <div id="credibilityBadge"></div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Language</div>
+        <div class="result-value" id="language">-</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Key Claims Found</div>
+        <div class="result-value" id="claimsCount">-</div>
+        <div class="claims" id="claimsList"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
